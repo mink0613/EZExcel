@@ -1,6 +1,8 @@
-﻿
-/.vs
+﻿/.vs
 obj/
 bin/
 Debug/
 Release/
+EZExcel_API.txt
+*.nupkg
+*.nuspec

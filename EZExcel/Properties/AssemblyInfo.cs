@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("EZExcel")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("APIs to read and write Excel files without Microsoft Office installed.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Min Gyung Kwak")]
 [assembly: AssemblyProduct("EZExcel")]
 [assembly: AssemblyCopyright("Copyright ©  2020")]
 [assembly: AssemblyTrademark("")]

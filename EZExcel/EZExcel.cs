@@ -8,7 +8,9 @@ using System.Linq;
 
 namespace EZExcel
 {
-    public class EZExcel
+    // This API is an wrapper class of OpenXml.
+    // This API allows users to easily and efficiently use OpenXml with less background of it.
+    public class Excel
     {
         #region APIs for reading Excel
         public static SpreadsheetDocument Open(string fileName)
@@ -17,7 +19,7 @@ namespace EZExcel
 
             if (File.Exists(fileName) == true)
             {
-                using (FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                using (FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     document = SpreadsheetDocument.Open(fileStream, false);
                 }
@@ -26,13 +28,13 @@ namespace EZExcel
             return document;
         }
 
-        public static Worksheet OpenWorksheet(SpreadsheetDocument document, int worksheetIndex = 0)
+        public static Worksheet GetWorksheet(SpreadsheetDocument document, int worksheetIndex = 0)
         {
             Sheet sheet = document.WorkbookPart.Workbook.Sheets.ChildElements[worksheetIndex] as Sheet;
             return (document.WorkbookPart.GetPartById(sheet.Id.Value) as WorksheetPart).Worksheet;
         }
 
-        public static Worksheet OpenWorksheet(string fileName, int worksheetIndex = 0)
+        public static Worksheet GetWorksheet(string fileName, int worksheetIndex = 0)
         {
             SpreadsheetDocument document = Open(fileName);
             if (document == null)
@@ -40,7 +42,7 @@ namespace EZExcel
                 return null;
             }
 
-            return OpenWorksheet(document, worksheetIndex);
+            return GetWorksheet(document, worksheetIndex);
         }
 
         public static int GetWorksheetCount(SpreadsheetDocument document)
@@ -85,17 +87,17 @@ namespace EZExcel
         #endregion
 
         #region APIs for writing Excel
-        public static SpreadsheetDocument Create(string fileName)
+        public static SpreadsheetDocument Create(string fileName, bool createNewWorksheet = true)
         {
-            SpreadsheetDocument document = null;
-
-            if (File.Exists(fileName) == false)
+            SpreadsheetDocument document = SpreadsheetDocument.Create(fileName, SpreadsheetDocumentType.Workbook);
+            document.AddWorkbookPart().Workbook = new Workbook();
+            
+            if (createNewWorksheet == true)
             {
-                using (FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                {
-                    document = SpreadsheetDocument.Open(fileStream, true);
-                }
+                AddWorksheet(document);
             }
+
+            document.WorkbookPart.Workbook.Save();
 
             return document;
         }
@@ -105,8 +107,15 @@ namespace EZExcel
             return InsertWorksheet(document.WorkbookPart, worksheetName);
         }
 
+        // Indexes (rowIndex and columnIndex) start at 1.
+        // If they are less than 1, then it returns null.
         public static Cell WriteCell(Worksheet worksheet, int rowIndex, int columnIndex, string data)
         {
+            if (rowIndex < 1 || columnIndex < 1)
+            {
+                return null;
+            }
+
             return InsertCellInWorksheet(worksheet, rowIndex, ConvertToColumnString(columnIndex), data);
         }
 
@@ -153,6 +162,11 @@ namespace EZExcel
 
             // Get a unique ID for the new sheet.
             uint sheetId = 1;
+            if (sheets == null)
+            {
+                sheets = workbookPart.Workbook.AppendChild<Sheets>(new Sheets());
+            }
+
             if (sheets.Elements<Sheet>().Count() > 0)
             {
                 sheetId = sheets.Elements<Sheet>().Select(s => s.SheetId.Value).Max() + 1;
